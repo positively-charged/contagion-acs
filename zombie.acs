@@ -1,0 +1,56 @@
+// This file manages the zombies in Virus.
+#define ZOMBIE_TID 88
+
+function void ZombieConvertTo( void ) {
+   PlayerSetType( ZOMBIE_TID );
+   // Morph the player into the appropriate class:
+   // Change the player to the necessary team:
+   player_SetTeam( TEAM_ZOMBIE );
+   // Assigns the necessary TID to keep track:
+   PlayerMorph( "zombie" );
+   thing_ChangeTid( 0, ZOMBIE_TID );
+   // Arm the zombie:
+   ZombieArm();
+}
+
+function void ZombieRemove( void ) {
+   thing_ChangeTid( 0, 0 );
+   // Remove the zombie tint:
+   fadeto( 255, 255, 255, 0.0, 0.0 );
+   PlayerUnmorph();
+}
+
+function int ZombieGetCount( void ) {
+   // The redCount function will count all teams on the
+   // zombie team. Even though the Zdoom wiki says this function
+   // will soon be deprecated, the alternative function,
+   // redTeamCount() doesn't work, so this is the only way.
+   return redCount();
+}
+
+function void ZombieArm( void ) {
+   // Tint:
+   fadeTo( 255, 0, 0, ZOMBIE_TINT_AMOUNT, 0.0 );
+
+   // Weapons:
+   giveInventory( "claw", 1 );
+}
+
+// First zombie handling:
+int first_zombie = -1;
+
+function void ZombieSetFirst( int player ) {
+   first_zombie = player;
+}
+
+function int ZombieGetFirst( void ) {
+   return first_zombie;
+}
+
+function bool ZombieIs( void ) {
+   if ( PlayerGetType() == ZOMBIE_TID ) {
+      return true;
+   }
+
+   return false;
+}

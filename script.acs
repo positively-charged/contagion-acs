@@ -1,0 +1,38 @@
+// Player script tracking. We need this because the main player
+// script in the wad will not terminate after the player 
+// disconnects for yet unknown reason. So we need a
+// mechanism for keeping track of the player's script and
+// whether it should be active or not. Then we can terminate
+// the player's script depending on these functions.
+
+// This array houses the unique script IDs that are given to
+// each player when they join to keep track of their main
+// player script.
+int script_running[ MAX_PLAYERS ];
+// Variable we will use to generate unique script IDs. Current
+// value indicates the last generated script ID.
+int script_unique_id = 0;
+
+// This function adds the player's script for tracking and
+// returns its unique script ID to the caller.
+function int ScriptAddForPlayer( int player ) {
+   script_unique_id += 1;
+   script_running[ player ] = script_unique_id;
+   return script_unique_id;
+}
+
+// This function marks the script for the given player as dead
+// and should be terminated.
+function void ScriptMarkAsDead( int player ) {
+   script_running[ player ] = 0;
+}
+
+// This function indicates to anyone whether the player's
+// script has been marked for termination.
+function bool ScriptIsAlive( int player, int id ) {
+   if ( script_running[ player ] == id ) {
+      return true;
+   }
+
+   return false;
+}

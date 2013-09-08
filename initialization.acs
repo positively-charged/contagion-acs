@@ -1,0 +1,71 @@
+// This script initializes the environment for the game to run
+// in. It sets all the necessary server variables and calls
+// all the necessary scripts.
+
+// Script to automatically adjust the server for the game:
+script 820 OPEN {
+   // Show warnings just in case we spot something:
+   if ( ! getCVar( "sv_showwarnings" ) ) {
+      consoleCommand( "sv_showwarnings true" );
+   }
+
+   // Remove team selection screen:
+   if ( ! getCVar( "sv_noteamselect" ) ) {
+      consoleCommand( "sv_noteamselect true" );
+   }
+
+   // Don't allow team switching while midgame:
+   if ( ! getCVar( "sv_noteamswitch" ) ) {
+      consoleCommand( "sv_noteamswitch true" );
+   }
+
+   // Don't allow players to suicide. If enabled, zombies
+   // can use this to their advantage by suiciding and 
+   // respawning far away, therefore having a shortcut
+   // to a possible marine.
+   if ( ! getCVar( "sv_disallowsuicide" ) ) {
+      consoleCommand( "sv_disallowsuicide true" );
+   }
+
+   // Instant respawn so zombies don't stay dead while a
+   // round is running.
+   // if ( ! getCVar( "sv_forcerespawn" ) ||
+   //   ! getCVar( "compat_instantrespawn" ) ) {
+   //   consoleCommand( "sv_forcerespawn true" );
+   //   consoleCommand( "compat_instantrespawn true" );
+   //}
+
+   if ( ! getCVar( "sv_norespawninvul" ) ) {
+      consoleCommand( "sv_norespawninvul true" );
+   }
+
+   // Make sure we have three teams. If not, make it
+   // three and restart map.
+   if ( getCVar( "sv_maxteams" ) != 3 ) {
+      consoleCommand( "sv_maxteams 3" );
+      ChangeMap();
+   }
+}
+
+// Change skin to "BASE" for the zombie taunts to worK:
+script 821 ENTER {
+   consoleCommand( "skin base" );
+   delay( TICS_IN_SECOND );
+   restart;
+}
+
+// Map change commands:
+// We need to preload the map_change_commands array with
+// change commands for each available map in the project. We
+// have to do this because we can't concat strings in ACS.
+// NOTE: Make sure the order is from lower to upper!
+str map_change_commands[ 3 ] = {
+   "map map01",
+   "map map02",
+   "map map03",
+};
+
+function void ChangeMap( void ) {
+   int command = getLevelInfo( LEVELINFO_LEVELNUM ) - 1;
+   consoleCommand( map_change_commands[ command ] );
+}

@@ -1,0 +1,33 @@
+// The random sack handles the randomly selected zombie
+// in the beginning of each round.
+
+// The random sack is an array containing players and is used
+// to randomly select players from. The actual array is not
+// randomized, but a random index is selected from a range of
+// 0 to the sack size which is then used to take out the player
+// in that index from the array.
+int random_sack[ MAX_PLAYERS ];
+int random_sack_highest_player = 0;
+
+script 830 ENTER {
+   // To optimize the random sack, we will only loop to the highest
+   // player number instead of looping the maximum available player
+   // spots.
+   if ( playerNumber() > random_sack_highest_player ) {
+      random_sack_highest_player = playerNumber();
+   }
+}
+
+// This function produces the random player from the sack.
+function int RandomSackPick( void ) {
+   int sack_size = 0;
+   for ( int player = 0; player <= random_sack_highest_player; player += 1 ) {
+      // We don't want to include observers in the random draw.
+      if ( PlayerIsPlaying( player ) && ! ObserverIs() ) {
+         random_sack[ sack_size ] = player;
+         sack_size += 1;
+      }
+   }
+
+   return random_sack[ random( 0, sack_size - 1 ) ];
+}

@@ -1,0 +1,18 @@
+// Status handling in Virus.
+
+// Status states:
+#define STATUS_WAITING_PLAYERS 0
+#define STATUS_ROUND_COUNTDOWN 1
+#define STATUS_PLAYING_ROUND 2
+#define STATUS_ROUND_FINALIZATION 3
+#define STATUS_GAME_END 4
+
+int status = STATUS_WAITING_PLAYERS;
+
+function int GetStatus( void ) {
+   return status;
+}
+
+function void SetStatus( int currentStatus ) {
+   status = currentStatus;
+}

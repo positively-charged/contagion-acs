@@ -1,0 +1,21 @@
+// Observers handling in Contagion.
+#define OBSERVER_TID 89
+
+function void ObserverAdd( void ) {
+   PlayerSetType( OBSERVER_TID );
+   player_SetTeam( TEAM_OBSERVER );
+   PlayerMorph( "observer" );
+   clearInventory();
+}
+
+function void ObserverRemove( void ) {
+   PlayerUnmorph();
+}
+
+function bool ObserverIs( void ) {
+   if ( PlayerGetType() == OBSERVER_TID ) {
+      return true;
+   }
+
+   return false;
+}

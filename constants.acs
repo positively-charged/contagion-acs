@@ -1,0 +1,19 @@
+// This file houses general named constants that may be
+// used in other scripts. Simply #include the file and use.
+// -- DuNR1DA2
+
+#define TICS_IN_SECOND 35
+#define SECONDS_IN_MINUTE 60
+// Some scripts depend on the maximum allowed players.
+#define MAX_PLAYERS 32
+
+// Angles:
+// Viewing through Doom builder, left is West and right is East.
+#define ANGLE_EAST 0
+#define ANGLE_NORTHEAST 32
+#define ANGLE_NORTH 64
+#define ANGLE_NORTHWEST 96
+#define ANGLE_WEST 128
+#define ANGLE_SOUTHWEST 160
+#define ANGLE_SOUTH 192
+#define ANGLE_SOUTHEAST 224

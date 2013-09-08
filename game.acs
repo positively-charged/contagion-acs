@@ -1,0 +1,198 @@
+// Contagion game script files.
+//
+// Author: Positron ( DuNR1DA2 )
+// Last Modified: August 3, 2010
+//
+// Contagion by Jroc ( The Player ) and Positron ( DuNR1DA2 )
+
+// General constants:
+#include "constants.acs"
+
+// Important configuration constants:
+#include "configuration.acs"
+
+// Environment initialization:
+#include "initialization.acs"
+
+// Status handling:
+#include "status.acs"
+
+// Script handling:
+#include "script.acs"
+
+// Actor handling:
+#include "player.acs"
+#include "marine.acs"
+#include "zombie.acs"
+#include "observer.acs"
+
+// Scoring:
+#include "score.acs"
+
+// Display handling:
+#include "display.acs"
+
+// Random player selection:
+#include "random_sack.acs"
+
+// TODO: Find a better way of handling dead players than this:
+bool wait_for_players = false;
+
+// Main game script:
+script 800 OPEN {
+   delay( TICS_IN_SECOND );
+
+   // Loop until we have completed all rounds:
+   while ( GameGetRound() <= TOTAL_MAP_ROUNDS ) {
+      // Display the current round for all:
+      DisplayRounds( GameGetRound(), TOTAL_MAP_ROUNDS );
+
+      // Wait for players until we have enough to start a virus.
+      if ( playerCount() < MARINES_NEEDED_TO_START_VIRUS ||
+         wait_for_players ) {
+         wait_for_players = false;
+         SetStatus( STATUS_WAITING_PLAYERS );
+
+         // If a player left during gameplay, and there is no longer
+         // enough players to start a virus, we need to clean up
+         // the round time from the display.
+         DisplayClearLine( ROUND_TIME_LINE_ID );
+
+         while ( MarineGetCount() < MARINES_NEEDED_TO_START_VIRUS ||
+            playerCount() < MARINES_NEEDED_TO_START_VIRUS ) {
+            DisplayWaitingForPlayersLabel();
+            delay( TICS_IN_SECOND );
+         }
+
+         // Remove the "Waiting for Players..." label.
+         DisplayClearLine( ALERT_LINE_ID );
+      }
+
+      // Redraw the rounds for any latecomers.
+      DisplayRounds( GameGetRound(), TOTAL_MAP_ROUNDS );
+
+      // Round countdown:
+      acs_ExecuteWait( 801, 0 );
+      // Round playing:
+      acs_ExecuteWait( 802, 0 );
+   }
+
+   // Execute finish script:
+   acs_Execute( 803, 0 );
+}
+
+// Variable to indicate current round of the game. We set to 1 to
+// indicate the first round.
+int game_round = 1;
+
+function void GameIncrementRound( void ) {
+   game_round += 1;
+}
+
+function int GameGetRound( void ) {
+   return game_round;
+}
+
+// Round countdown timer script:
+script 801 ( void ) {
+   SetStatus( STATUS_ROUND_COUNTDOWN );
+   // Countdown timer to next round.
+   int time = ROUND_WAIT_TIME;
+   while ( time > 0 ) {
+      DisplayNextRoundTime( time );
+      time -= 1;
+      delay( TICS_IN_SECOND );
+   }
+}
+
+// Global time variable for scoring:
+int time_remaining = 0;
+
+function int GameGetCompletedRoundTime( void ) {
+   return ROUND_TIME - time_remaining;
+}
+
+// This script is in charge of managing game rounds.
+script 802 ( void ) {
+   // We don't need to continue if we dont have even a single
+   // player in game or if there's not enough to start a virus.
+   if ( playerCount() == 0 || 
+      MarineGetCount() < MARINES_NEEDED_TO_START_VIRUS ) {
+      wait_for_players = true;
+      terminate;
+   }
+
+   // Choose random player to be the first infected.
+   ZombieSetFirst( RandomSackPick() );
+
+   // Set original player count at round start that we will use
+   // to check whether to display the final marine alive warning.
+   // We need this because some players can join while a round
+   // is running, therefore increasing the number of players. And
+   // if this latest player count is more than the players needed
+   // to display a marine warning, it will display the warning even
+   // when once will feel unnecessary.
+   PlayerSetCountForRoundStart( playerCount() );
+
+   // Indicate the beginning of the round:
+   SetStatus( STATUS_PLAYING_ROUND );
+
+   // Begin round timer.
+   time_remaining = ROUND_TIME;
+   while ( time_remaining >= 0 && MarineGetCount() > 0 ) {
+      // We break if no zombies are available after a certain time:
+      if ( GameGetCompletedRoundTime() > CHECK_FOR_NO_ZOMBIES_TIME && 
+         ZombieGetCount() == 0 ) {
+         break;
+      }
+
+      DisplayRoundTime( time_remaining );
+      time_remaining -= 1;
+      delay( TICS_IN_SECOND );
+   }
+
+   SetStatus( STATUS_ROUND_FINALIZATION );
+
+   // Display winner information and indicate a successful round
+   // if there's actually players still playing:
+   if ( ZombieGetCount() > 0 || MarineGetCount() > 0 ) {
+      // Freeze all players for round end.
+      setPlayerProperty( 1, ON, PROP_FROZEN );
+
+      // Marine win:
+      if ( MarineGetCount() > 0 ) {
+         DisplayVictoryMessage( MARINE_TEAM_WIN_MESSAGE );
+      }
+      // Zombie win:
+      else {
+         DisplayVictoryMessage( ZOMBIE_TEAM_WIN_MESSAGE );
+      }
+      delay( TICS_IN_SECOND * WINNING_TEAM_DISPLAY_TIME );
+
+      // Unfreeze:
+      setPlayerProperty( 1, OFF, PROP_FROZEN );
+
+      GameIncrementRound();
+   }
+
+   // Reset the variable that indicates whether the last marine message
+   // has been displayed so we can redisplay the message for the next round.
+   PlayerResetLastAliveNotice();
+}
+
+// Finish script:
+script 803 ( void ) {
+   SetStatus( STATUS_GAME_END );
+   ScoreDisplayWinner();
+
+   // Time counter letting the players know when the map will exit.
+   int time_left_to_exit = WAIT_TIME_TO_EXIT_MAP;
+   while ( time_left_to_exit > 0 ) {
+      DisplayNextMapTime( time_left_to_exit );
+      time_left_to_exit -= 1;
+      delay( TICS_IN_SECOND );
+   }
+   DisplayNextMapTime( time_left_to_exit );
+
+   exit_normal( 0 );
+}

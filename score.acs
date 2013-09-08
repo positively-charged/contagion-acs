@@ -1,0 +1,52 @@
+// Scoring handling in Virus.
+
+int scores[ MAX_PLAYERS ];
+
+// This function will calculate and award the
+// score based on the time the player has been alive.
+function void ScoreAwardPoints( int timePassed, int roundTime, int player ) {
+   if ( timePassed > 0 ) {
+      // Find the percentage of the time alive from the total round time.
+      // We don't divid by 100 because ACS has some sloppy floating
+      // number support, so we have to use another way. We also need
+      // to keep the precision of the decimal, so we multiply the
+      // round time by 100.
+      int time_alive = 10000 / ( ( roundTime * 100 ) / timePassed );
+      // Now that we know the percentage, we proceed to calculate
+      // the score.
+      int points = ( MAX_SCORE_POINTS * time_alive ) / 100;
+      ScoreAddPoints( points, player );
+   }
+}
+
+function void ScoreAwardSinglePoint( int player ) {
+   ScoreAddPoints( 1, player );
+}
+
+function void ScoreAddPoints( int points, int player ) {
+   scores[ player ] += points;
+   team_Score( points, 0 );
+}
+
+function void ScoreDisplayWinner( void ) {
+   int highest = scores[ 0 ];
+   int highest_player = 0;
+   int same_score_players = 1;
+
+   for ( int player = 1; player < MAX_PLAYERS; player += 1 ) {
+      if ( scores[ player ] > highest ) {
+         same_score_players = 1;
+         highest = scores[ player ];
+         highest_player = player;
+      }
+      else if ( scores[ player ] == highest ) {
+         same_score_players += 1;
+      }
+   }
+
+   DisplayWinner( highest_player, same_score_players );
+}
+
+function void ScoreReset( int player ) {
+   scores[ player ] = 0;
+}

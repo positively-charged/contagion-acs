@@ -1,0 +1,121 @@
+// This file contains all the HUD messages used
+// to display information on the player's screen.
+
+// Alert line:
+#define ALERT_LINE_ID 3
+#define ALERT_LINE_X 1.5
+#define ALERT_LINE_Y 0.12
+
+// Round time line:
+#define ROUND_TIME_LINE_ID 4
+
+// Spectator line:
+#define SPECTATOR_LINE_ID 5
+
+function void DisplayWaitingForPlayersLabel( void ) {
+   hudMessageBold( 
+      s : "\ccWaiting for players...\c-" ;
+      HUDMSG_PLAIN, ALERT_LINE_ID, 0, ALERT_LINE_X, ALERT_LINE_Y, 0 
+   );
+}
+
+function void DisplayRounds( int currentRound, int totalRounds ) {
+   hudMessageBold( 
+      s : "\ccRound \ck", i : currentRound, 
+      s : "\cc of \ci", i : totalRounds, s : "\c-" ;
+      HUDMSG_PLAIN, 2, 0, 0.95, 0.93, 0 
+   );
+}
+
+// Display rounds for one player:
+function void DisplayRoundsSingle( int currentRound, int totalRounds ) {
+   hudMessage( 
+      s : "\ccRound \ck", i : currentRound, 
+      s : "\cc of \ci", i : totalRounds, s : "\c-" ;
+      HUDMSG_PLAIN, 2, 0, 0.95, 0.93, 0 
+   );
+}
+
+function void DisplayNextMapTime( int timeLeft ) {
+   hudMessageBold( 
+      s : "\ccNext map in: \cn", i : timeLeft, s : "\c-" ;
+      HUDMSG_PLAIN, ROUND_TIME_LINE_ID, 0, 0.95, 0.90, 0 
+   );
+}
+
+function void DisplayNextRoundTime( int time ) {
+   hudMessageBold( s : "\ccRound start in: \cn", i : time, s : "\c-" ;
+      HUDMSG_PLAIN, ROUND_TIME_LINE_ID, 0, 0.95, 0.90, 0 );
+}
+
+function void DisplayVictoryMessage( str message ) {
+   setFont( "BIGFONT" );
+   hudMessageBold( s : "\cc", s : message, s : "\c-" ;
+      HUDMSG_PLAIN, ALERT_LINE_ID, 0, ALERT_LINE_X, ALERT_LINE_Y, 5.0  
+   );
+   setFont( "SMALLFONT" );
+}
+
+function void DisplayInfectedNotice( int player ) {
+   hudMessageBold( 
+      s : "\cc", n : player + 1, s : "\cc has been \cginfected\cc\c-" ;
+      HUDMSG_PLAIN, ALERT_LINE_ID, 0, ALERT_LINE_X, ALERT_LINE_Y, 3.0
+   );
+}
+
+function void DisplayWinner( int player, int ties ) {
+   if ( ties == 1 ) {
+      hudMessageBold( 
+         s : "\ck", n : player + 1, s : "\cd has won the game!\c-" ;
+         HUDMSG_PLAIN | HUDMSG_LOG, ALERT_LINE_ID, 0, ALERT_LINE_X, 
+         ALERT_LINE_Y, 5.0
+      );
+   }
+   else {
+      hudMessageBold(
+         s : "\cc", i : ties, 
+         s : " players have tied for first place\c-" ;
+         HUDMSG_PLAIN | HUDMSG_LOG, ALERT_LINE_ID, 0, ALERT_LINE_X, 
+         ALERT_LINE_Y, 5.0
+      );
+   }
+}
+
+function void DisplayClearLine( int line ) {
+   hudMessageBold( s : "" ; HUDMSG_PLAIN, line, 0, 0.95, 0.90, 0 );
+}
+
+function void DisplayClearAlertLine( void ) {
+   DisplayClearLine( ALERT_LINE_ID );
+}
+
+function void DisplayRoundTime( int time ) {
+   str time_color = "\cn";
+   // Choose a warning color when the time left reaches
+   // a predefined limit:
+   if ( time <= TIME_LEFT_BEFORE_SHOW_RED_TIME ) {
+      time_color = "\cg";
+   }
+
+   hudMessageBold( 
+      s : "\ccTime left: ", s : time_color, i : time, s : "\c-" ;
+      HUDMSG_PLAIN, ROUND_TIME_LINE_ID, 0, 0.95, 0.90, 0 );
+}
+
+// Last marine alive notice message:
+function void DisplayLastMarine( int player ) {
+   hudMessageBold( 
+      s : "\ci", n : player + 1, s : "\ck is the only marine alive!\c-" ;
+      HUDMSG_PLAIN, ALERT_LINE_ID, 0, ALERT_LINE_X, ALERT_LINE_Y, 5.0
+   );
+}
+
+// Display to the spectators an appropriate message indicating
+// where they are and what to do.
+function void DisplayWaitingMessage( void ) {
+   hudMessage( 
+      s : "\ccYou are currently an observer of the game.\c-\n",
+      s : "\ccPlease wait for the current round to complete.\c-" ;
+      HUDMSG_PLAIN | HUDMSG_LOG, SPECTATOR_LINE_ID, 0, 1.5, 0.4, 5.0
+   );
+}

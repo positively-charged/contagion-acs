@@ -1,0 +1,217 @@
+// Player handing:
+
+script 810 ENTER {
+   // Indicate the current rounds to the new player.
+   DisplayRoundsSingle( GameGetRound(), TOTAL_MAP_ROUNDS );
+
+   // Initialize the player:
+   int player = playerNumber();
+   int script_id = ScriptAddForPlayer( player );
+   acs_ExecuteAlways( 811, 0, player, script_id );
+}
+
+// The infection seek time is the time in tics that the script
+// will check whether the player's health was lowered.
+#define INFECTION_SEEK_TIME 8
+
+// The status update seek time is the time in tics that the
+// main player script will take to check for a new status
+// update from the main game script.
+#define STATUS_UPDATE_SEEK_TIME 16
+
+bool is_only_marine_reported = false;
+
+function void PlayerResetLastAliveNotice( void ) {
+   is_only_marine_reported = false;
+}
+
+// Main player script. This script needs to be in sync with the
+// main game scripts.
+script 811 ( int player, int scriptId ) {
+   bool is_infected = false;
+
+   // We automatically move any late players to a waiting room area
+   // if a round is currently in progress. The spectators will
+   // automatically be added as marines on the next round.
+   if ( GetStatus() == STATUS_PLAYING_ROUND ) {
+      ObserverAdd();
+      DisplayWaitingMessage();
+      // ObserverMoveToWaitingArea();
+      // Wait for the round to complete.
+      while ( GetStatus() == STATUS_PLAYING_ROUND ) {
+         delay( STATUS_UPDATE_SEEK_TIME );
+      }
+   }
+   // Otherwise, we prepare the players to play the game.
+   else {
+      MarineInitialize();
+      MarineTeleportToStart( player );
+
+      // Wait for the round to start:
+      while ( GetStatus() != STATUS_PLAYING_ROUND ) {
+         delay( STATUS_UPDATE_SEEK_TIME );
+      }
+
+      // First zombie:
+      if ( ZombieGetFirst() == player ) {
+         ZombieConvertTo();
+         is_infected = true;
+         DisplayInfectedNotice( player );
+         ScoreAwardSinglePoint( player );
+      }
+      // Alive marine:
+      else {
+         while ( GetStatus() != STATUS_ROUND_FINALIZATION ) {
+            // Player getting infected by a zombie:
+            if ( getActorProperty( 0, APROP_HEALTH ) < 
+               MINIMUM_MARINE_HEALTH ) {
+               is_infected = true;
+               ZombieConvertTo();
+               DisplayInfectedNotice( player );
+               break;
+            }
+
+            // Announce last marine alive if the current player
+            // is the last marine.
+            // TODO: Find a better way to implement this.
+            if ( MarineGetCount() == 1 ) {
+               if ( PlayerGetCountForRoundStart() >= 
+                  MIN_PLAYERS_LAST_MARINE_WARNING && 
+                  ! is_only_marine_reported ) {
+                  is_only_marine_reported = true;
+                  // Report to all the last marine:
+                  DisplayLastMarine( player );
+                  ambientSound( LAST_MARINE_ALIVE_MUSIC,
+                     LAST_MARINE_ALIVE_VOLUME );
+               }
+            }
+
+            delay( INFECTION_SEEK_TIME );
+         }
+
+         // Award points to the player depending on the survival time.
+         ScoreAwardPoints( GameGetCompletedRoundTime(), ROUND_TIME, player ); 
+      }
+
+      // Wait for the round to complete:
+      while ( GetStatus() == STATUS_PLAYING_ROUND ) {
+         delay( STATUS_UPDATE_SEEK_TIME );
+      }
+   }
+
+   while ( GetStatus() == STATUS_ROUND_FINALIZATION ) {
+      delay( STATUS_UPDATE_SEEK_TIME );
+   }
+
+   // Convert all infected back to marines.
+   if ( is_infected ) {
+      ZombieRemove();
+   }
+   else if ( ObserverIs() ) {
+      ObserverRemove();
+   }
+
+   // Restart script if this script for the player is still valid
+   // and the game has not yet ended.
+   if ( ScriptIsAlive( player, scriptId ) && 
+      GetStatus() != STATUS_GAME_END ) {
+      restart;
+   }
+   // End of game:
+   else {
+      // Just so no body kills anyone on the other team, we
+      // put everyone on the same team.
+      player_SetTeam( TEAM_MARINE );
+      terminate;
+   }
+}
+
+script 812 ( int player ) DISCONNECT {
+   // Indiciate the running script of the disconnected player is dead.
+   ScriptMarkAsDead( player );
+   // Remove the tint from any zombie that decided to spectate.
+   fadeto( 255, 255, 255, 0.0, 0.0 );
+}
+
+script 813 DEATH {
+   // Remove the TID from the dead body just in case:
+   thing_ChangeTid( 0, 0 );
+}
+
+script 814 RESPAWN {
+   // By default, if a zombie or marine die or suicide while
+   // a round is running, move them to the waiting area.
+   if ( GetStatus() == STATUS_PLAYING_ROUND ) {
+      // Respawn zombie:
+      if ( ZombieIs() ) {
+         ZombieConvertTo();
+      }
+      else {
+         ObserverAdd();
+         DisplayWaitingMessage();
+      }
+   }
+   else {
+      MarineInitialize();
+   }
+}
+
+// Player count for particular round handling:
+
+int players_round_start_count;
+
+function void PlayerSetCountForRoundStart( int players ) {
+   players_round_start_count = players;
+}
+
+function int PlayerGetCountForRoundStart( void ) {
+   return players_round_start_count;
+}
+
+// Special morphing functions that will only morph if the player
+// is in the game. Used to prevent game crashes.
+
+function int PlayerMorph( str class ) {
+   if ( playerInGame( playerNumber() ) ) {
+      return morphActor( 0, class, "", 59999,
+         MRF_WHENINVULNERABLE | MRF_NEWTIDBEHAVIOUR, 
+         "", "" 
+      );
+   }
+
+   return 0;
+}
+
+function int PlayerUnmorph( void ) {
+   if ( playerInGame( playerNumber() ) ) {
+      return unmorphActor( 0, false );
+   }
+
+   return 0;
+}
+
+// Player types:
+int player_type[ MAX_PLAYERS ];
+
+function void PlayerSetType( int type ) {
+   player_type[ playerNumber() ] = type;
+}
+
+function int PlayerGetType( void ) {
+   return player_type[ playerNumber() ];
+}
+
+// Player in game handling:
+bool is_player_playing[ MAX_PLAYERS ];
+
+script 815 ENTER {
+   is_player_playing[ playerNumber() ] = true;
+}
+
+script 816 ( int player ) DISCONNECT {
+   is_player_playing[ player ] = false;
+}
+
+function bool PlayerIsPlaying( int player ) {
+   return is_player_playing[ player ];
+}

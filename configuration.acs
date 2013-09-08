@@ -1,0 +1,39 @@
+ // All important configuration constants for Contagion.
+
+// Team definitions:
+#define TEAM_MARINE 0
+#define TEAM_ZOMBIE 1
+#define TEAM_OBSERVER 2
+
+// Game:
+#define MARINES_NEEDED_TO_START_VIRUS 2
+#define WAIT_TIME_TO_EXIT_MAP 15
+#define TOTAL_MAP_ROUNDS 3
+#define ROUND_TIME 120 // In seconds.
+#define ROUND_WAIT_TIME 10 // In seconds.
+#define TIME_LEFT_BEFORE_SHOW_RED_TIME 10 // In seconds.
+#define WINNING_TEAM_DISPLAY_TIME 5 // In seconds.
+#define CHECK_FOR_NO_ZOMBIES_TIME 5 // In seconds.
+#define MIN_PLAYERS_LAST_MARINE_WARNING 3
+
+// Marines:
+#define MINIMUM_MARINE_HEALTH 100
+// This will be the starting round start marine teleport spot
+// that will be the base for all subsequent teleport spots
+// for all players. We set it to something high as to not
+// conflict with author defined tags. 
+#define DEFAULT_MARINE_START_SPOT 210
+
+// Zombies:
+#define ZOMBIE_TINT_AMOUNT 0.2
+
+// Team win messages:
+#define ZOMBIE_TEAM_WIN_MESSAGE "\cgZombies\cc victorious!"
+#define MARINE_TEAM_WIN_MESSAGE "\cdMarines\cc victorious!"
+
+// Scoring:
+#define MAX_SCORE_POINTs 4
+
+// Sound:
+#define LAST_MARINE_ALIVE_MUSIC "NYAM"
+#define LAST_MARINE_ALIVE_VOLUME 120

@@ -1,0 +1,34 @@
+// This file handles and manages operations on marines in Virus.
+#define MARINE_TID 87
+
+function void MarineInitialize( void ) {
+   PlayerSetType( MARINE_TID );
+   thing_ChangeTid( 0, MARINE_TID );
+   // No need to morph the player into a marine because
+   // the player should start out as a marine already.
+   player_SetTeam( TEAM_MARINE );
+   MarineArm();
+}
+
+function int MarineGetCount( void ) {
+   return thingCount( T_NONE, MARINE_TID );
+}
+
+function void MarineTeleportToStart( int player ) {
+   teleport( DEFAULT_MARINE_START_SPOT + player, 0, 0 );
+}
+
+// Function to arm the marine player.
+function void MarineArm( void ) {
+   // Remove tint:
+   cancelFade();
+
+   // Armory:
+   clearInventory();
+
+   giveInventory( "UberShotgun", 1 );
+   giveInventory( "Shell", 50 );
+   giveInventory( "Fist", 1 );
+
+   setWeapon( "UberShotgun" );
+}
